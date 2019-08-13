@@ -1,0 +1,12 @@
+[mysqld]
+sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+max_allowed_packet=2G
+innodb_buffer_pool_size=8G
+key_buffer_size=512M
+wait_timeout = 288000
+interactive_timeout = 288000
+connect_timeout = 288000
+delayed_insert_timeout = 288000
+innodb_lock_wait_timeout = 288000
+net_read_timeout = 288000
+net_write_timeout = 288000

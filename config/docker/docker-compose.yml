@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  bitmex:
+    build: app
+    volumes:
+      - $SSH_AUTH_SOCK:/ssh-agent
+      - ./app/.bashrc/:/home/bitmex/.bashrc
+      - ../../:/home/bitmex/api
+      - ./app/supervisord.d:/etc/supervisord.d
+    working_dir: /home/bitmex/api
+    environment:
+      - SSH_AUTH_SOCK=/ssh-agent
+    links:
+      - redis
+      - mysql
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_PASSWORD=crm
+      - MYSQL_USER=crm
+      - MYSQL_ROOT_PASSWORD=crm
+    volumes:
+      - ./mysql/db:/var/lib/mysql:rw
+      - ./mysql/mysqld.cnf:/etc/mysql/conf.d/mysql.cnf
+  redis:
+    image: redis:4.0.5-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    volumes:
+      - ./redis/data:/data:rw
