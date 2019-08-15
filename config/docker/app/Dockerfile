@@ -12,6 +12,7 @@ RUN pip install pipenv
 RUN pip install tensorflow
 RUN pip install numpy
 RUN pip install requests
+RUN pip install bitmex-ws
 
 ARG UNAME=bitmex
 ARG UID=1001
