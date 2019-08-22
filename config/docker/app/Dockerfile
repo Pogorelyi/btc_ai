@@ -14,6 +14,7 @@ RUN pip install numpy
 RUN pip install requests
 RUN pip install bitmex-ws
 RUN pip install bitmex
+RUN pip install redis
 
 ARG UNAME=bitmex
 ARG UID=1001

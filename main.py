@@ -2,14 +2,17 @@ from bitmex_websocket import BitMEXWebsocket
 from time import sleep
 import config.account as account
 from order_creator import OrderCreator
+from cache import Cache
 
 sleep_seconds = 4
 maxUnrealisedPnl = 10000
-start_contracts = 30
-averaging_price_diff = 50
-close_price_diff = 40
+start_contracts = 100
+averaging_price_diff = 10
+close_price_diff = 5
 max_long_position_increments = 5
 position_multiplier = 2
+
+cache = Cache()
 
 
 def get_price(ws):
@@ -49,34 +52,50 @@ if __name__ == "__main__":
 
     long_position_increments = 1
     long_is_order_closed = True
+    price_diff = 0
 
     while 1:
         last_price = get_price(ws)
 
         # LONG logic
         if long_is_order_closed:
-            start_price = creator_long.create_order(start_contracts)
-            long_current_amount = start_contracts
-            long_is_order_closed = False
+            start_price = creator_long.create_order(start_contracts, last_price - 0.5)
+            if start_price == 0:
+                print('start order failed. restart')
+                long_is_order_closed = True
+            else:
+                long_current_amount = start_contracts
+                long_is_order_closed = False
 
-        price_diff = last_price - start_price
-        print('Start Price: ' + str(start_price))
-        print('Last Price: ' + str(last_price))
-        print('Price Diff: ' + str(price_diff))
+        if not long_is_order_closed:
+            price_diff = last_price - start_price
+            print('Start Price: ' + str(start_price))
+            print('Last Price: ' + str(last_price))
+            print('Price Diff: ' + str(price_diff))
 
-        if price_diff < -averaging_price_diff and long_position_increments < max_long_position_increments:
+        if not long_is_order_closed and price_diff < -averaging_price_diff and long_position_increments < max_long_position_increments:
             before_long_amount = long_current_amount
+            print('averaging start')
+            created_price = creator_long.create_order(long_current_amount*position_multiplier, last_price + 0.5)
+            if created_price != 0:
+                long_current_amount = long_current_amount + long_current_amount * position_multiplier
+                long_position_increments = long_position_increments + 1
+                start_price = calculate_start_price(start_price, before_long_amount, created_price, long_current_amount)
+                print('\033[32m averaging success\033[0m')
+            else :
+                print('\033[31m averaging error\033[0m')
+                sleep(2)
 
-            created_price = creator_long.create_order(long_current_amount*position_multiplier)
-
-            long_current_amount = long_current_amount + long_current_amount * position_multiplier
-            long_position_increments = long_position_increments + 1
-            start_price = calculate_start_price(start_price, before_long_amount, created_price, long_current_amount)
-
-        if price_diff > close_price_diff:
-            creator_long.create_order(0 - long_current_amount)
-            long_is_order_closed = True
-            long_current_amount = 0
+        # close current position
+        if not long_is_order_closed and price_diff > close_price_diff:
+            print('\033[35m Close order\033[0m')
+            sell_price = creator_long.create_order(0 - long_current_amount, order_type='Sell', close_order=True)
+            if sell_price != 0:
+                long_is_order_closed = True
+                long_current_amount = 0
+                print('\033[35m Close Success \033[0m')
+            else:
+                print('\033[31m Close Error \033[0m')
 
         # SHORT logic
 

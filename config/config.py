@@ -17,6 +17,9 @@ CONFIG = {
     }
 }
 
+def get_redis_config():
+   return CONFIG['Redis']
+
 
 def get_config():
     return CONFIG
