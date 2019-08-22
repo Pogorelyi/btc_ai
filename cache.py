@@ -1,4 +1,6 @@
 import redis
+
+
 from config.config import get_redis_config
 
 
@@ -12,8 +14,7 @@ class Cache:
         self.__connect.set(key, value, ex=60*60*24)
 
     def get(self, key, get_int=True):
-        value = self.__connect.get(key).decode("utf-8");
-
+        value = self.__connect.get(key).decode("utf-8")
         return int(value) if get_int else value
 
 

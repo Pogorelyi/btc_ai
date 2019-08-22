@@ -3,16 +3,22 @@ from time import sleep
 import config.account as account
 from order_creator import OrderCreator
 from cache import Cache
+from config.printer import Printer
+import random
 
 sleep_seconds = 4
-maxUnrealisedPnl = 10000
+maxUnrealisedPnl = 14000
 start_contracts = 100
-averaging_price_diff = 10
-close_price_diff = 5
-max_long_position_increments = 5
+averaging_price_diff = 20
+close_price_diff = 10
+max_long_position_increments = 4
 position_multiplier = 2
 
-cache = Cache()
+#cache = Cache()
+
+printer = Printer()
+
+position = random.choice(['long', 'short'])
 
 
 def get_price(ws):
@@ -38,7 +44,7 @@ def get_orders(ws):
 def calculate_start_price(start_price, before_long_amount, last_price, long_current_amount):
     new_contracts_amount = long_current_amount - before_long_amount
 
-    return ((start_price * before_long_amount) + (last_price * new_contracts_amount) ) / long_current_amount
+    return round(((start_price * before_long_amount) + (last_price * new_contracts_amount) ) / long_current_amount, 1)
 
 
 if __name__ == "__main__":
@@ -59,9 +65,9 @@ if __name__ == "__main__":
 
         # LONG logic
         if long_is_order_closed:
-            start_price = creator_long.create_order(start_contracts, last_price - 0.5)
+            start_price = creator_long.create_order(start_contracts, last_price-0.5)
             if start_price == 0:
-                print('start order failed. restart')
+                printer.indiana('start order failed. restart')
                 long_is_order_closed = True
             else:
                 long_current_amount = start_contracts
@@ -69,33 +75,32 @@ if __name__ == "__main__":
 
         if not long_is_order_closed:
             price_diff = last_price - start_price
-            print('Start Price: ' + str(start_price))
-            print('Last Price: ' + str(last_price))
-            print('Price Diff: ' + str(price_diff))
+            printer.info(str(last_price) + ' - ' + str(start_price) + ' = ' + str(price_diff))
 
         if not long_is_order_closed and price_diff < -averaging_price_diff and long_position_increments < max_long_position_increments:
             before_long_amount = long_current_amount
-            print('averaging start')
-            created_price = creator_long.create_order(long_current_amount*position_multiplier, last_price + 0.5)
+            printer.yellow('averaging start')
+            created_price = creator_long.create_order(long_current_amount*position_multiplier, last_price)
             if created_price != 0:
                 long_current_amount = long_current_amount + long_current_amount * position_multiplier
                 long_position_increments = long_position_increments + 1
                 start_price = calculate_start_price(start_price, before_long_amount, created_price, long_current_amount)
-                print('\033[32m averaging success\033[0m')
-            else :
-                print('\033[31m averaging error\033[0m')
+                printer.green('averaging success: contracts = ' + str(long_current_amount))
+            else:
+                printer.red('averaging error')
                 sleep(2)
 
         # close current position
         if not long_is_order_closed and price_diff > close_price_diff:
-            print('\033[35m Close order\033[0m')
-            sell_price = creator_long.create_order(0 - long_current_amount, order_type='Sell', close_order=True)
+            printer.info('Close order')
+            sell_price = creator_long.create_order(long_current_amount, order_type='Sell', close_order=True)
             if sell_price != 0:
                 long_is_order_closed = True
                 long_current_amount = 0
                 print('\033[35m Close Success \033[0m')
+                printer.green('Close Success')
             else:
-                print('\033[31m Close Error \033[0m')
+                printer.red('Close Error')
 
         # SHORT logic
 
