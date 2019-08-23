@@ -15,6 +15,7 @@ RUN pip install requests
 RUN pip install bitmex-ws
 RUN pip install bitmex
 RUN pip install redis
+RUN pip install colored
 
 ARG UNAME=bitmex
 ARG UID=1001
