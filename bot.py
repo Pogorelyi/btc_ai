@@ -49,38 +49,40 @@ class MainBot:
             opposite_order_start = self.get_opposite_order_value()
 
             # start trade order
-            if self.is_order_closed and \
-                (
-                    (is_main_strategy or opposite_order_status == 0)
-                    or (abs(last_price - opposite_order_start) < self.apposite_order_max_diff)
-                ):
-                if self._strategy == self.SHORT_ORDER:
-                    start_price = self.api_client.create_order(self.start_contracts, last_price + 0.5, order_type='Sell')
-                else :
-                    start_price = self.api_client.create_order(self.start_contracts, last_price - 0.5)
-                if start_price == 0:
-                    self.printer.indiana('start order failed. restart')
-                    self.is_order_closed = True
+            if self.is_order_closed:
+                if (is_main_strategy or opposite_order_status == 0) or (abs(last_price - opposite_order_start) < self.apposite_order_max_diff):
+                    if self._strategy == self.SHORT_ORDER:
+                        start_price = self.api_client.create_order(self.start_contracts, last_price + 0.5, order_type='Sell')
+                    else :
+                        start_price = self.api_client.create_order(self.start_contracts, last_price - 0.5)
+                    if start_price == 0:
+                        self.printer.indiana('start order failed. restart')
+                        self.is_order_closed = True
+                    else:
+                        current_amount = self.start_contracts
+                        self.is_order_closed = False
+                        self.set_cache_is_closed(0)
+                        self.set_cache_position_price(start_price)
                 else:
-                    current_amount = self.start_contracts
-                    self.is_order_closed = False
-                    self.set_cache_is_closed(0)
-                    self.set_cache_position_price(start_price)
-            else:
-                print((is_main_strategy or opposite_order_status == 0))
-                print((abs(last_price - opposite_order_start) < self.apposite_order_max_diff))
-                self.printer.red('wait for opposite')
+                    #print((is_main_strategy or opposite_order_status == 0))
+                    #print((abs(last_price - opposite_order_start) < self.apposite_order_max_diff))
+                    self.printer.red('wait for opposite')
 
             if not self.is_order_closed:
                 price_diff = (start_price - last_price) if self._strategy == self.SHORT_ORDER else (last_price - start_price)
                 self.printer.info(str(last_price) + ' - ' + str(start_price) + ' = ' + str(price_diff))
 
+            # averaging
             if not self.is_order_closed \
                     and price_diff < self.averaging_price_diff \
                     and self.current_position_increments < self.max_position_increments:
                 before_amount = current_amount
                 self.printer.yellow('averaging start: ' + str(current_amount * self.position_multiplier))
-                created_price = self.api_client.create_order(current_amount * self.position_multiplier, last_price)
+                if self._strategy == self.SHORT_ORDER:
+                    created_price = self.api_client.create_order(current_amount * self.position_multiplier, last_price, order_type='Sell')
+                else:
+                    created_price = self.api_client.create_order(current_amount * self.position_multiplier, last_price)
+
                 if created_price != 0:
                     current_amount = current_amount + current_amount * self.position_multiplier
                     self.current_position_increments = self.current_position_increments + 1
@@ -101,7 +103,6 @@ class MainBot:
                     self.printer.green('Close Success')
                     self.set_cache_is_closed(1)
                     self.set_cache_position_price(0)
-                    return
                 else:
                     self.printer.red('Close Error')
 
