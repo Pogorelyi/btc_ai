@@ -3,6 +3,7 @@ from config.printer import Printer
 from time import sleep
 
 
+
 class MainBot:
 
     SHORT_ORDER = 'short'
@@ -50,7 +51,9 @@ class MainBot:
 
             # start trade order
             if self.is_order_closed:
-                if (is_main_strategy or opposite_order_status == 0) or (abs(last_price - opposite_order_start) < self.apposite_order_max_diff):
+                if opposite_order_status == 1 or abs(last_price - opposite_order_start) < self.apposite_order_max_diff:
+                    if opposite_order_status == 1:
+                        print(abs(last_price - opposite_order_start))
                     if self._strategy == self.SHORT_ORDER:
                         start_price = self.api_client.create_order(self.start_contracts, last_price + 0.5, order_type='Sell')
                     else :
@@ -64,8 +67,8 @@ class MainBot:
                         self.set_cache_is_closed(0)
                         self.set_cache_position_price(start_price)
                 else:
-                    #print((is_main_strategy or opposite_order_status == 0))
-                    #print((abs(last_price - opposite_order_start) < self.apposite_order_max_diff))
+                    #print(opposite_order_status)
+                    #print(abs(last_price - opposite_order_start) < self.apposite_order_max_diff)
                     self.printer.red('wait for opposite')
 
             if not self.is_order_closed:
@@ -132,7 +135,7 @@ class MainBot:
         return value if value else 10000000
 
     def get_opposite_order(self):
-        return self.LONG_ORDER if self._strategy == self.SHORT_ORDER else self.LONG_ORDER
+        return self.LONG_ORDER if self._strategy == self.SHORT_ORDER else self.SHORT_ORDER
 
     def set_cache_is_closed(self, is_closed):
         is_current_position_closed_key = self._strategy + self.IS_CLOSED_SUFFIX
