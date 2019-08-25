@@ -14,11 +14,11 @@ class MainBot:
 
     sleep_seconds = 4
     start_contracts = 100
-    averaging_price_diff = -20
-    apposite_order_max_diff = 20
-    close_price_diff = 10
-    max_position_increments = 4
-    position_multiplier = 2
+    averaging_price_diff = -50
+    apposite_order_max_diff = 50
+    close_price_diff = 20
+    max_position_increments = 5
+    position_multiplier = 1.5
     _strategy = 'long'
     close_order_type = 'Sell'
 
