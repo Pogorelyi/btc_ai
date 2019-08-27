@@ -14,7 +14,7 @@ class MainBot:
 
     sleep_seconds = 4
     start_contracts = 100
-    averaging_price_diff = -50
+    averaging_price_diff = -40
     apposite_order_max_diff = 50
     close_price_diff = 20
     max_position_increments = 5
@@ -42,7 +42,7 @@ class MainBot:
 
         self.set_cache_is_closed(1)
 
-        is_main_strategy = self.CURRENT_TREND == strategy
+        #is_main_strategy = self.CURRENT_TREND == strategy
 
         while 1:
             last_price = self.get_price()
@@ -51,7 +51,7 @@ class MainBot:
 
             # start trade order
             if self.is_order_closed:
-                if opposite_order_status == 1 or abs(last_price - opposite_order_start) < self.apposite_order_max_diff:
+                if opposite_order_status == 0 or abs(last_price - opposite_order_start) < self.apposite_order_max_diff:
                     if opposite_order_status == 1:
                         print(abs(last_price - opposite_order_start))
                     if self._strategy == self.SHORT_ORDER:
