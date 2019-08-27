@@ -33,14 +33,15 @@ class OrderCreator:
 
         start = timer()
         while 1:
+            sleep(4)
+            if self._is_order_filled(order_id):
+                self._printer.green("create success: " + str(result['orderQty']) + " = " + str(price))
+                break
             end = timer()
             if end - start > self._max_order_check_time:
                 self.cancel_order(order_id)
                 return 0
-            if self._is_order_filled(order_id):
-                self._printer.green("create success: " + str(result['orderQty']) + " = " + str(price))
-                break
-            sleep(3)
+
 
         return price
 
