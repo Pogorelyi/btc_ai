@@ -1,7 +1,7 @@
 from cache import Cache
 from config.printer import Printer
 from time import sleep
-
+import time
 
 
 class MainBot:
@@ -33,9 +33,6 @@ class MainBot:
         self.printer = Printer()
 
     def run(self, strategy):
-        self._strategy = strategy
-        self.close_order_type = 'Buy' if strategy == self.SHORT_ORDER else 'Sell'
-
         current_amount = self.start_contracts
         start_price = 0
         price_diff = 0
@@ -46,11 +43,15 @@ class MainBot:
 
         while 1:
             last_price = self.get_price()
-            opposite_order_status = self.get_opposite_order_status()
-            opposite_order_start = self.get_opposite_order_value()
+
 
             # start trade order
             if self.is_order_closed:
+                self._strategy = strategy if strategy != 'rand' else self.get_strategy()
+                self.close_order_type = 'Buy' if strategy == self.SHORT_ORDER else 'Sell'
+                opposite_order_status = self.get_opposite_order_status()
+                opposite_order_start = self.get_opposite_order_value()
+
                 if opposite_order_status == 0 or abs(last_price - opposite_order_start) < self.apposite_order_max_diff:
                     if opposite_order_status == 1:
                         print(abs(last_price - opposite_order_start))
@@ -150,6 +151,11 @@ class MainBot:
 
         return round(((start_price * before_long_amount)+(last_price * new_contracts_amount))/long_current_amount, 1)
 
+    @staticmethod
+    def get_strategy():
+        timestamp = int(time.time())
+        rand_value = timestamp % 2
+        return 'long' if rand_value == 1 else 'short'
 
 
 

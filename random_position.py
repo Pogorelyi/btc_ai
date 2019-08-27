@@ -2,7 +2,7 @@ from bitmex_websocket import BitMEXWebsocket
 import config.account as account
 from order_creator import OrderCreator
 from bot import MainBot
-import time
+
 
 
 def create_short_client():
@@ -13,15 +13,10 @@ def create_long_client():
     return OrderCreator(account.is_test_net(), account.get_api_key_long(), account.get_api_secret_long())
 
 
-def get_strategy():
-    timestamp = int(time.time())
-    rand_value = timestamp % 2
-    return 'long' if rand_value == 1 else 'short'
+
 
 
 if __name__ == "__main__":
-    strategy = get_strategy()
-
     ws = BitMEXWebsocket(
         endpoint=account.get_end_point(),
         symbol="XBTUSD",
@@ -33,7 +28,7 @@ if __name__ == "__main__":
     bot = MainBot(api_client=create_short_client(), web_socket=ws)
 
     try:
-        bot.run(strategy)
+        bot.run('rand')
     except KeyboardInterrupt:
         bot.clear_cache()
         exit(0)
