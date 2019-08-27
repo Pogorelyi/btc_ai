@@ -48,7 +48,7 @@ class MainBot:
             # start trade order
             if self.is_order_closed:
                 self._strategy = strategy if strategy != 'rand' else self.get_strategy()
-                self.close_order_type = 'Buy' if strategy == self.SHORT_ORDER else 'Sell'
+                self.close_order_type = 'Buy' if self._strategy == self.SHORT_ORDER else 'Sell'
                 opposite_order_status = self.get_opposite_order_status()
                 opposite_order_start = self.get_opposite_order_value()
 
@@ -107,6 +107,8 @@ class MainBot:
                     self.printer.green('Close Success')
                     self.set_cache_is_closed(1)
                     self.set_cache_position_price(0)
+                    self.printer.info('wait before open order')
+                    sleep(30)
                 else:
                     self.printer.red('Close Error')
 
